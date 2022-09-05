@@ -1,0 +1,39 @@
+version: '3.9'
+
+networks:
+  dev:
+
+services:
+  php:
+    restart: unless-stopped
+    container_name: php-container
+    networks:
+      - dev
+    build:
+      context: './.docker/php'
+      args:
+        USER_ID: ${USER_ID}
+        GROUP_ID: ${GROUP_ID}
+    volumes:
+      - './:/var/www:delegated'
+    depends_on:
+      - db
+    ports:
+      - 80:80 # Temporary port to test the api without installing a web server
+    command: symfony serve --port 80 # Run the internal symfony php server
+
+  db:
+    image: 'mariadb:latest'
+    environment:
+        MYSQL_PASSWORD: 'root'
+        MYSQL_ROOT_PASSWORD: 'root'
+        MYSQL_DATABASE: app
+    networks:
+      - dev
+    volumes:
+        - db_data:/var/lib/mysql
+    ports:
+        - '3306:3306'
+
+volumes:
+  db_data:
